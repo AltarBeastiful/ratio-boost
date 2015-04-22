@@ -3,9 +3,64 @@
 #include <time.h>
 #include <curl/curl.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <argp.h>
 #include "urle.h"	//encode hash
 #include "hash.h"	//get torrent meta info
 #include "blex.h"	//generate a linked list
+
+const char *argp_program_version =
+"ratioboost 1.0";
+
+static char doc[] =
+  "Ratio-Boost -- Fakes the amount of data torrent clients report to torrent trackers";
+
+static char args_doc[] = "TORRENTFILE";
+
+static struct argp_option options[] = {
+  {"up-speed", 'u', "SPEED", 0,
+   "Set upload speed to SPEED (default 30 ko/s)" },
+  { 0 }
+};
+
+struct arguments
+{
+  char *torrent_file;
+  int up_speed;
+};
+
+static error_t
+parse_opt (int key, char *arg, struct argp_state *state)
+{
+    struct arguments *arguments = state->input;
+
+    switch (key) {
+        case 'u':
+            arguments->up_speed = arg ? atoi(arg) : 30;
+            break;
+
+        case ARGP_KEY_ARG:
+            if (state->arg_num >= 3)
+                /* Too many arguments. */
+                argp_usage (state);
+
+            arguments->torrent_file = arg;
+        break;
+
+        case ARGP_KEY_END:
+            if (state->arg_num < 1)
+                /* Not enough arguments. */
+                argp_usage (state);
+            break;
+
+        default:
+            return ARGP_ERR_UNKNOWN;
+    }
+
+    return 0;
+}
+
+static struct argp argp = { options, parse_opt, args_doc, doc };
 
 //perform connection to the torrent tracker
 int tracker_connect(CURL *handle, char *request, struct responce *rdata) {
@@ -42,12 +97,6 @@ int tracker_connect(CURL *handle, char *request, struct responce *rdata) {
 
 int main(int argc, char *argv[]) {
 	
-	if (argc <= 1) {
-		
-		printf("please specifiy a valid torrent file\n");
-		return 1;
-	}
-	
 	struct torrent info = {{0}, {0}, {0}, 0};
 	struct responce resp = {{0}, {0}, -1, -1, -1};
 	char e_hash[64];	
@@ -55,9 +104,15 @@ int main(int argc, char *argv[]) {
 	char request[512];
 	long uploaded = 0;
 	FILE *torrent_file;
+    struct arguments arguments;
 	
-	//Open torrent file for processing
-	torrent_file = fopen(argv[1], "rb");	
+    /* Default values. */
+    arguments.up_speed = 30;
+
+    argp_parse (&argp, argc, argv, 0, 0, &arguments);
+
+    //Open torrent file for processing
+    torrent_file = fopen(arguments.torrent_file, "rb");
 
 	if (torrent_file == 0) {
 
@@ -98,7 +153,7 @@ int main(int argc, char *argv[]) {
 	//prepare to loop at regular intervals
 	struct timespec start;
 	struct timespec current;
-	int kb_sec = 30;
+    int kb_sec = arguments.up_speed;
 	int i = 0;
 	
 

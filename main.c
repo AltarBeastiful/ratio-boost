@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <curl/curl.h>
+#include <unistd.h>
 #include "urle.h"	//encode hash
 #include "hash.h"	//get torrent meta info
 #include "blex.h"	//generate a linked list
@@ -125,6 +126,8 @@ int main(int argc, char *argv[]) {
 			float mb = kb / 1024;
 			printf("%i: uploaded = %.2f MB @ %d KB/s\n", i, mb, kb_sec);	
 		}
+
+        sleep(resp.interval - diff);
 	}
 
 	//free memory used by the curl easy interface

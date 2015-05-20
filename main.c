@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
 	long uploaded = 0;
 	FILE *torrent_file;
     struct arguments arguments;
+    time_t now;
 	
     /* Default values. */
     arguments.up_speed = 30;
@@ -153,9 +154,7 @@ int main(int argc, char *argv[]) {
 	//prepare to loop at regular intervals
 	struct timespec start;
 	struct timespec current;
-    int kb_sec = arguments.up_speed;
-	int i = 0;
-	
+    int kb_sec = arguments.up_speed;	
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
 	
@@ -169,7 +168,6 @@ int main(int argc, char *argv[]) {
 			
 			clock_gettime(CLOCK_MONOTONIC, &start);
 			uploaded += (1024 * resp.interval) * kb_sec;
-			i++;
 			
 			//update request query
 			sprintf(request, "%s?info_hash=%s&peer_id=%s&port=51413&uploaded=%ld&downloaded=%lu&left=0&event=&numwant=1&compact=1", info.url, e_hash, e_peer_id, uploaded, info.size);	
@@ -179,7 +177,9 @@ int main(int argc, char *argv[]) {
 			
 			float kb = uploaded / 1024;
 			float mb = kb / 1024;
-			printf("%i: uploaded = %.2f MB @ %d KB/s\n", i, mb, kb_sec);	
+
+            time(&now);
+            printf("%s: uploaded = %.2f MB @ %d KB/s\n", ctime(&now), mb, kb_sec);
 		}
 
         sleep(resp.interval - diff);

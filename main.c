@@ -167,15 +167,16 @@ int main(int argc, char *argv[]) {
 		if (diff >= resp.interval) {
 			
 			clock_gettime(CLOCK_MONOTONIC, &start);
-			uploaded += (1024 * resp.interval) * kb_sec;
-			
+
+            uploaded += (resp.interval) * kb_sec;
+
 			//update request query
-			sprintf(request, "%s?info_hash=%s&peer_id=%s&port=51413&uploaded=%ld&downloaded=%lu&left=0&event=&numwant=1&compact=1", info.url, e_hash, e_peer_id, uploaded, info.size);	
+            sprintf(request, "%s?info_hash=%s&peer_id=%s&port=51413&uploaded=%ld000&downloaded=%lu&left=0&event=&numwant=1&compact=1", info.url, e_hash, e_peer_id, uploaded, info.size);
 	
 			//preform the request
 			tracker_connect(curl_handle, request, &resp);
 			
-			float kb = uploaded / 1024;
+            float kb = uploaded;
 			float mb = kb / 1024;
 
             time(&now);

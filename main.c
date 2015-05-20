@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
 	FILE *torrent_file;
     struct arguments arguments;
     time_t now;
+    int sleepTime;
 	
     /* Default values. */
     arguments.up_speed = 30;
@@ -183,7 +184,10 @@ int main(int argc, char *argv[]) {
             printf("%s: uploaded = %.2f MB @ %d KB/s\n", ctime(&now), mb, kb_sec);
 		}
 
-        sleep(resp.interval - diff);
+        if((sleepTime = resp.interval - diff) < 0)
+            sleepTime = 0;
+
+        sleep(sleepTime);
 	}
 
 	//free memory used by the curl easy interface
